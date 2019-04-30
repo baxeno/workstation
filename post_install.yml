@@ -1,0 +1,89 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Enable Google Chrome RPM repository
+      become: yes
+      copy:
+        src: files/google-chrome.repo
+        dest: /etc/yum.repos.d/google-chrome.repo
+        owner: root
+        group: root
+        mode: 0644
+        checksum: 19448524147bbd298fff824afabe9b5a5332e136
+
+    - name: Enable Microsoft Visual Studio Code RPM repository
+      become: yes
+      copy:
+        src: files/microsoft-vscode.repo
+        dest: /etc/yum.repos.d/microsoft.repo
+        owner: root
+        group: root
+        mode: 0644
+        checksum: 0b1b3a204cc39371ca05cef4b53719416110cc0c
+
+    - name: Remove unwanted packages from workstation edition
+      become: yes
+      package:
+        name: rhythmbox, evolution
+        state: absent
+
+    - name: Install development tools
+      become: yes
+      package:
+        name: git, git-email, tilix, vim, htop, powerline, powerline-fonts, gtkterm, fedora-workstation-repositories, google-chrome-stable, code
+        state: present
+
+    - name: Setup git
+      copy:
+        src: files/.gitconfig
+        dest: ~/.gitconfig
+        mode: 0644
+        checksum: 12e393f9aef099937ed62a4140f6ac85bd2b3ee4
+
+    - name: Install KVM virtualization package group
+      become: yes
+      package:
+        name: '@virtualization'
+
+    - name: Enable powerline plugin in Bash
+      blockinfile:
+        path: ~/.bashrc
+        insertafter: EOF
+        block: |
+          if [ -f `which powerline-daemon` ]; then
+            powerline-daemon -q
+            POWERLINE_BASH_CONTINUATION=1
+            POWERLINE_BASH_SELECT=1
+            . /usr/share/powerline/bash/powerline.sh
+          fi
+
+    - name: Install gitstatus for powerline Python Package for user
+      pip:
+        name: powerline-gitstatus
+        executable: pip-3
+        extra_args: --user
+        state: present
+
+    - name: Ensures powerline colorschemes config directory exists
+      file:
+        path: ~/.config/powerline/colorschemes
+        state: directory
+
+    - name: Ensures powerline shell config directory exists
+      file:
+        path: ~/.config/powerline/themes/shell
+        state: directory
+
+    - name: Powerline configuration - Colorschemes
+      copy:
+        src: files/powerline_colorschemes.json
+        dest: ~/.config/powerline/colorschemes/default.json
+        checksum: 8018066a52e7849cc2e4ca9580891430cb222b34
+        mode: 0644
+
+    - name: Powerline configuration - Shell
+      copy:
+        src: files/powerline_shell.json
+        dest: ~/.config/powerline/themes/shell/default.json
+        checksum: e971ff6b47e2205769741107ccc1a5798a98ecf1
+        mode: 0644
